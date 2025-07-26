@@ -1,5 +1,5 @@
 'use client';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 import { useMotionValue, animate, motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import useMeasure from 'react-use-measure';
@@ -20,6 +20,7 @@ export function InfiniteSlider({
   children,
   gap = 16,
   duration = 25,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   durationOnHover,
   direction = 'horizontal',
   reverse = false,
