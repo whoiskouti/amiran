@@ -1,167 +1,122 @@
-"use client";
+"use client"
 
-import { useRef } from "react";
-import { motion } from "framer-motion";
-import DottedMap from "dotted-map";
-import Image from "../ui/image";
+import createGlobe, { COBEOptions } from "cobe"
+import { useCallback, useEffect, useRef, useState } from "react"
 
-interface MapProps {
-  dots?: Array<{
-    start: { lat: number; lng: number; label?: string };
-    end: { lat: number; lng: number; label?: string };
-  }>;
-  lineColor?: string;
+import { cn } from "../../lib/utils"
+
+const GLOBE_CONFIG: COBEOptions = {
+  width: 800,
+  height: 800,
+  onRender: () => {},
+  devicePixelRatio: 2,
+  phi: 3,
+  theta: 0.3,
+  dark: 0,
+  diffuse: 0.4,
+  mapSamples: 16000,
+  mapBrightness: 1.2,
+  baseColor: [1, 1, 1],
+  markerColor: [251 / 255, 100 / 255, 21 / 255],
+  glowColor: [1, 1, 1],
+  markers: [
+    { location: [14.5995, 120.9842], size: 0.03 },
+    { location: [19.076, 72.8777], size: 0.1 },
+    { location: [23.8103, 90.4125], size: 0.05 },
+    { location: [30.0444, 31.2357], size: 0.07 },
+    { location: [39.9042, 116.4074], size: 0.08 },
+    { location: [-23.5505, -46.6333], size: 0.1 },
+    { location: [19.4326, -99.1332], size: 0.1 },
+    { location: [40.7128, -74.006], size: 0.1 },
+    { location: [34.6937, 135.5022], size: 0.05 },
+    { location: [41.0082, 28.9784], size: 0.06 },
+  ],
 }
 
-export function WorldMap({
-  dots = [],
-  lineColor = "#0ea5e9",
-}: MapProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const map = new DottedMap({ height: 100, grid: "diagonal" });
+export function Globe({
+  className,
+  config = GLOBE_CONFIG,
+}: {
+  className?: string
+  config?: COBEOptions
+}) {
+  let phi = 0
+  let width = 0
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const pointerInteracting = useRef(null)
+  const pointerInteractionMovement = useRef(0)
+  const [r, setR] = useState(0)
 
-  const svgMap = map.getSVG({
-    radius: 0.22,
-    color: "#00000040",
-    shape: "circle",
-    backgroundColor: "white",
-  });
+  const updatePointerInteraction = (value: any) => {
+    pointerInteracting.current = value
+    if (canvasRef.current) {
+      canvasRef.current.style.cursor = value ? "grabbing" : "grab"
+    }
+  }
 
-  const projectPoint = (lat: number, lng: number) => {
-    const x = (lng + 180) * (800 / 360);
-    const y = (90 - lat) * (400 / 180);
-    return { x, y };
-  };
+  const updateMovement = (clientX: any) => {
+    if (pointerInteracting.current !== null) {
+      const delta = clientX - pointerInteracting.current
+      pointerInteractionMovement.current = delta
+      setR(delta / 200)
+    }
+  }
 
-  const createCurvedPath = (
-    start: { x: number; y: number },
-    end: { x: number; y: number }
-  ) => {
-    const midX = (start.x + end.x) / 2;
-    const midY = Math.min(start.y, end.y) - 50;
-    return `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
-  };
+  const onRender = useCallback(
+    (state: Record<string, any>) => {
+      if (!pointerInteracting.current) phi += 0.005
+      state.phi = phi + r
+      state.width = width * 2
+      state.height = width * 2
+    },
+    [r],
+  )
+
+  const onResize = () => {
+    if (canvasRef.current) {
+      width = canvasRef.current.offsetWidth
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener("resize", onResize)
+    onResize()
+
+    const globe = createGlobe(canvasRef.current!, {
+      ...config,
+      width: width * 2,
+      height: width * 2,
+      onRender,
+    })
+
+    setTimeout(() => (canvasRef.current!.style.opacity = "1"))
+    return () => globe.destroy()
+  }, [])
 
   return (
-    <div className="w-full aspect-[2/1] dark:bg-black bg-white rounded-lg  relative font-sans">
-      <Image
-        src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
-        className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
-        alt="world map"
-        height="495"
-        width="1056"
-        draggable={false}
+    <div
+      className={cn(
+        "absolute inset-0 mx-auto aspect-[1/1] w-full max-w-[600px]",
+        className,
+      )}
+    >
+      <canvas
+        className={cn(
+          "size-full opacity-0 transition-opacity duration-500 [contain:layout_paint_size]",
+        )}
+        ref={canvasRef}
+        onPointerDown={(e) =>
+          updatePointerInteraction(
+            e.clientX - pointerInteractionMovement.current,
+          )
+        }
+        onPointerUp={() => updatePointerInteraction(null)}
+        onPointerOut={() => updatePointerInteraction(null)}
+        onMouseMove={(e) => updateMovement(e.clientX)}
+        onTouchMove={(e) =>
+          e.touches[0] && updateMovement(e.touches[0].clientX)
+        }
       />
-      <svg
-        ref={svgRef}
-        viewBox="0 0 800 400"
-        className="w-full h-full absolute inset-0 pointer-events-none select-none"
-      >
-        {dots.map((dot, i) => {
-          const startPoint = projectPoint(dot.start.lat, dot.start.lng);
-          const endPoint = projectPoint(dot.end.lat, dot.end.lng);
-          return (
-            <g key={`path-group-${i}`}>
-              <motion.path
-                d={createCurvedPath(startPoint, endPoint)}
-                fill="none"
-                stroke="url(#path-gradient)"
-                strokeWidth="1"
-                initial={{
-                  pathLength: 0,
-                }}
-                animate={{
-                  pathLength: 1,
-                }}
-                transition={{
-                  duration: 1,
-                  delay: 0.5 * i,
-                  ease: "easeOut",
-                }}
-                key={`start-upper-${i}`}
-              ></motion.path>
-            </g>
-          );
-        })}
-
-        <defs>
-          <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="white" stopOpacity="0" />
-            <stop offset="5%" stopColor={lineColor} stopOpacity="1" />
-            <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {dots.map((dot, i) => (
-          <g key={`points-group-${i}`}>
-            <g key={`start-${i}`}>
-              <circle
-                cx={projectPoint(dot.start.lat, dot.start.lng).x}
-                cy={projectPoint(dot.start.lat, dot.start.lng).y}
-                r="2"
-                fill={lineColor}
-              />
-              <circle
-                cx={projectPoint(dot.start.lat, dot.start.lng).x}
-                cy={projectPoint(dot.start.lat, dot.start.lng).y}
-                r="2"
-                fill={lineColor}
-                opacity="0.5"
-              >
-                <animate
-                  attributeName="r"
-                  from="2"
-                  to="8"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  from="0.5"
-                  to="0"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </g>
-            <g key={`end-${i}`}>
-              <circle
-                cx={projectPoint(dot.end.lat, dot.end.lng).x}
-                cy={projectPoint(dot.end.lat, dot.end.lng).y}
-                r="2"
-                fill={lineColor}
-              />
-              <circle
-                cx={projectPoint(dot.end.lat, dot.end.lng).x}
-                cy={projectPoint(dot.end.lat, dot.end.lng).y}
-                r="2"
-                fill={lineColor}
-                opacity="0.5"
-              >
-                <animate
-                  attributeName="r"
-                  from="2"
-                  to="8"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  from="0.5"
-                  to="0"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </g>
-          </g>
-        ))}
-      </svg>
     </div>
-  );
+  )
 }

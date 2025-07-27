@@ -1,67 +1,13 @@
-"use client";
-import { WorldMap } from "../blocks/world-map";
-import { motion } from "framer-motion";
+import { Globe } from "../blocks/world-map"
 
-export function MapSection() {
+export function GlobeDemo() {
   return (
-    <div className=" py-40 dark:bg-black bg-white w-full">
-      <div className="max-w-7xl mx-auto text-center">
-        <p className="font-bold text-xl md:text-4xl dark:text-white text-black">
-          Remote{" "}
-          <span className="text-neutral-400">
-            {"Connectivity".split("").map((word, idx) => (
-              <motion.span
-                key={idx}
-                className="inline-block"
-                initial={{ x: -10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: idx * 0.04 }}
-              >
-                {word}
-              </motion.span>
-            ))}
-          </span>
-        </p>
-        <p className="text-sm md:text-lg text-neutral-500 max-w-2xl mx-auto py-4">
-          Break free from traditional boundaries. Work from anywhere, at the
-          comfort of your own studio apartment. Perfect for Nomads and
-          Travellers.
-        </p>
-      </div>
-      <WorldMap
-        dots={[
-          {
-            start: {
-              lat: 64.2008,
-              lng: -149.4937,
-            }, // Alaska (Fairbanks)
-            end: {
-              lat: 34.0522,
-              lng: -118.2437,
-            }, // Los Angeles
-          },
-          {
-            start: { lat: 64.2008, lng: -149.4937 }, // Alaska (Fairbanks)
-            end: { lat: -15.7975, lng: -47.8919 }, // Brazil (Brasília)
-          },
-          {
-            start: { lat: -15.7975, lng: -47.8919 }, // Brazil (Brasília)
-            end: { lat: 38.7223, lng: -9.1393 }, // Lisbon
-          },
-          {
-            start: { lat: 51.5074, lng: -0.1278 }, // London
-            end: { lat: 28.6139, lng: 77.209 }, // New Delhi
-          },
-          {
-            start: { lat: 28.6139, lng: 77.209 }, // New Delhi
-            end: { lat: 43.1332, lng: 131.9113 }, // Vladivostok
-          },
-          {
-            start: { lat: 28.6139, lng: 77.209 }, // New Delhi
-            end: { lat: -1.2921, lng: 36.8219 }, // Nairobi
-          },
-        ]}
-      />
+    <div className="mx-auto relative flex size-full max-w-lg items-center justify-center overflow-hidden rounded-lg border bg-background px-40 pb-40 pt-8 md:pb-60 md:shadow-xl">
+      <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b to-gray-300/80 bg-clip-text text-center text-3xl font-semibold leading-none text-transparent from-black to-slate-900/10">
+        Where we exported to
+      </span>
+      <Globe className="top-28" />
+      <div className="pointer-events-none absolute inset-0 h-full bg-[radial-gradient(circle_at_50%_200%,rgba(0,0,0,0.2),rgba(255,255,255,0))]" />
     </div>
-  );
+  )
 }

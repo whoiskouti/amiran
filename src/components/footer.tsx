@@ -1,145 +1,60 @@
-import React from "react";
-import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa";
+import { Icons } from "../components/ui/icons"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
+import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react"
 
-interface Footer7Props {
-  logo?: {
-    url: string;
-    src: string;
-    alt: string;
-    title: string;
-  };
-  sections?: Array<{
-    title: string;
-    links: Array<{ name: string; href: string }>;
-  }>;
-  description?: string;
-  socialLinks?: Array<{
-    icon: React.ReactElement;
-    href: string;
-    label: string;
-  }>;
-  copyright?: string;
-  legalLinks?: Array<{
-    name: string;
-    href: string;
-  }>;
-}
-
-const defaultSections = [
-  {
-    title: "Product",
-    links: [
-      { name: "Overview", href: "#" },
-      { name: "Pricing", href: "#" },
-      { name: "Marketplace", href: "#" },
-      { name: "Features", href: "#" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { name: "About", href: "#" },
-      { name: "Team", href: "#" },
-      { name: "Blog", href: "#" },
-      { name: "Careers", href: "#" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { name: "Help", href: "#" },
-      { name: "Sales", href: "#" },
-      { name: "Advertise", href: "#" },
-      { name: "Privacy", href: "#" },
-    ],
-  },
-];
-
-const defaultSocialLinks = [
-  { icon: <FaInstagram className="size-5" />, href: "#", label: "Instagram" },
-  { icon: <FaFacebook className="size-5" />, href: "#", label: "Facebook" },
-  { icon: <FaTwitter className="size-5" />, href: "#", label: "Twitter" },
-  { icon: <FaLinkedin className="size-5" />, href: "#", label: "LinkedIn" },
-];
-
-const defaultLegalLinks = [
-  { name: "Terms and Conditions", href: "#" },
-  { name: "Privacy Policy", href: "#" },
-];
-
-export const Footer = ({
-  logo = {
-    url: "https://www.shadcnblocks.com",
-    src: "https://www.shadcnblocks.com/images/block/logos/shadcnblockscom-icon.svg",
-    alt: "logo",
-    title: "Shadcnblocks.com",
-  },
-  sections = defaultSections,
-  description = "A collection of components for your startup business or side project.",
-  socialLinks = defaultSocialLinks,
-  copyright = "© 2024 Shadcnblocks.com. All rights reserved.",
-  legalLinks = defaultLegalLinks,
-}: Footer7Props) => {
+function Footer() {
   return (
-    <section className="py-32">
-      <div className="container mx-auto">
-        <div className="flex w-full flex-col justify-between gap-10 lg:flex-row lg:items-start lg:text-left">
-          <div className="flex w-full flex-col justify-between gap-6 lg:items-start">
-            {/* Logo */}
-            <div className="flex items-center gap-2 lg:justify-start">
-              <a href={logo.url}>
-                <img
-                  src={logo.src}
-                  alt={logo.alt}
-                  title={logo.title}
-                  className="h-8"
-                />
-              </a>
-              <h2 className="text-xl font-semibold">{logo.title}</h2>
-            </div>
-            <p className="max-w-[70%] text-sm text-muted-foreground">
-              {description}
-            </p>
-            <ul className="flex items-center space-x-6 text-muted-foreground">
-              {socialLinks.map((social, idx) => (
-                <li key={idx} className="font-medium hover:text-primary">
-                  <a href={social.href} aria-label={social.label}>
-                    {social.icon}
-                  </a>
-                </li>
-              ))}
-            </ul>
+    <footer className="bg-background py-12">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="flex flex-col items-center">
+          <div className="mb-8 rounded-full bg-primary/10 p-8">
+          <Icons.logo className="icon-class w-6" />
           </div>
-          <div className="grid w-full gap-6 md:grid-cols-3 lg:gap-20">
-            {sections.map((section, sectionIdx) => (
-              <div key={sectionIdx}>
-                <h3 className="mb-4 font-bold">{section.title}</h3>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  {section.links.map((link, linkIdx) => (
-                    <li
-                      key={linkIdx}
-                      className="font-medium hover:text-primary"
-                    >
-                      <a href={link.href}>{link.name}</a>
-                    </li>
-                  ))}
-                </ul>
+          <nav className="mb-8 flex flex-wrap justify-center gap-6">
+            <a href="#" className="hover:text-primary">Home</a>
+            <a href="#" className="hover:text-primary">About</a>
+            <a href="#" className="hover:text-primary">Services</a>
+            <a href="#" className="hover:text-primary">Products</a>
+            <a href="#" className="hover:text-primary">Contact</a>
+          </nav>
+          <div className="mb-8 flex space-x-4">
+            <Button variant="outline" size="icon" className="rounded-full">
+              <Facebook className="h-4 w-4" />
+              <span className="sr-only">Facebook</span>
+            </Button>
+            <Button variant="outline" size="icon" className="rounded-full">
+              <Twitter className="h-4 w-4" />
+              <span className="sr-only">Twitter</span>
+            </Button>
+            <Button variant="outline" size="icon" className="rounded-full">
+              <Instagram className="h-4 w-4" />
+              <span className="sr-only">Instagram</span>
+            </Button>
+            <Button variant="outline" size="icon" className="rounded-full">
+              <Linkedin className="h-4 w-4" />
+              <span className="sr-only">LinkedIn</span>
+            </Button>
+          </div>
+          <div className="mb-8 w-full max-w-md">
+            <form className="flex space-x-2">
+              <div className="flex-grow">
+                <Label htmlFor="email" className="sr-only">Email</Label>
+                <Input id="email" placeholder="Enter your email" type="email" className="rounded-full" />
               </div>
-            ))}
+              <Button type="submit" className="rounded-full">Subscribe</Button>
+            </form>
           </div>
-        </div>
-        <div className="mt-8 flex flex-col justify-between gap-4 border-t py-8 text-xs font-medium text-muted-foreground md:flex-row md:items-center md:text-left">
-          <p className="order-2 lg:order-1">{copyright}</p>
-          <ul className="order-1 flex flex-col gap-2 md:order-2 md:flex-row">
-            {legalLinks.map((link, idx) => (
-              <li key={idx} className="hover:text-primary">
-                <a href={link.href}> {link.name}</a>
-              </li>
-            ))}
-          </ul>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              © 2024 Your Company. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
-    </section>
-  );
-};
+    </footer>
+  )
+}
 
+export { Footer }

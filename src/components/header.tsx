@@ -1,8 +1,7 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
 
-// Define the position interface for cursor state
+// Position interface for animated underline cursor
 interface CursorPosition {
   left: number;
   width: number;
@@ -16,81 +15,72 @@ const NavHeader: React.FC = () => {
     width: 0,
     opacity: 0,
   });
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isScrolled, setIsScrolled] = useState<boolean>(false);
 
-  // Handle scroll events to collapse/reopen header on small devices
+  const [isClosed, setIsClosed] = useState(false); // closed state (collapsed)
+  const [isMobile, setIsMobile] = useState(false); // responsive
+  const lastScrollY = useRef(0);
+
+  // Detect screen size
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // use md breakpoint
+    };
+
+    handleResize(); // initial check
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Scroll behavior (only for mobile)
+  useEffect(() => {
+    if (!isMobile) return;
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      if (scrollY > 50) {
-        setIsScrolled(true);
-        setIsMenuOpen(false); // Close menu when scrolling down
-      } else {
-        setIsScrolled(false);
-        setIsMenuOpen(true); // Reopen menu when at top
+
+      if (scrollY > lastScrollY.current && scrollY > 100) {
+        setIsClosed(true); // hide nav
+      } else if (scrollY < lastScrollY.current && scrollY < 50) {
+        setIsClosed(false); // show nav
       }
+
+      lastScrollY.current = scrollY;
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isMobile]);
 
-  // Toggle menu state
+  // Toggle manually
   const toggleMenu = () => {
-    setIsMenuOpen((prev) => !prev);
+    setIsClosed((prev) => !prev);
   };
 
   return (
-    <motion.header
-      className={`fixed top-0 left-0 right-0 z-50 flex justify-center items-center p-4 md:p-10 bg-white/80 backdrop-blur-md transition-all duration-300 ${
-        isScrolled && !isMenuOpen ? "state-closed" : ""
-      }`}
-      initial={{ y: 0 }}
-      animate={{ y: isScrolled && !isMenuOpen ? -100 : 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Menu Icon for Small Devices */}
-      <motion.button
-        className="absolute right-4 top-4 md:hidden p-2 rounded-full bg-amber-100 text-amber-600"
-        onClick={toggleMenu}
-        aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
-        animate={{ rotate: isMenuOpen ? 180 : 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <AnimatePresence mode="wait">
-          {isMenuOpen ? (
-            <motion.div
-              key="close"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-            >
-              <X className="h-6 w-6" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="open"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-            >
-              <Menu className="h-6 w-6" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.button>
+    <header className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center p-4 pb-0 transition-all backdrop-blur-sm duration-300 border-0 z-[1]">
+      {/* MENU ICON (only visible when nav is closed on mobile) */}
+      {isMobile && isClosed && (
+        <button
+          onClick={toggleMenu}
+          className="absolute right-4 top-4 text-3xl font-bold z-50 md:hidden"
+        >
+          =
+        </button>
+      )}
 
-      {/* Navigation Menu */}
+      {/* NAVIGATION TABS */}
       <AnimatePresence>
-        {(!isScrolled || isMenuOpen || window.innerWidth >= 768) && (
+        {(!isMobile || !isClosed) && (
           <motion.ul
-            className="relative mx-auto flex w-fit rounded-full border-2 border-black bg-white p-1 flex-col md:flex-row"
-            onMouseLeave={() => setPosition((pv) => ({ ...pv, opacity: 0 }))}
-            initial={{ opacity: 0, y: -20 }}
+            key="nav"
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
+            className="relative mx-auto flex w-fit rounded-full border-2 border-black bg-white p-1 z-[1]"
+            onMouseLeave={() =>
+              setPosition((prev) => ({ ...prev, opacity: 0 }))
+            }
           >
             <Tab setPosition={setPosition}>Home</Tab>
             <Tab setPosition={setPosition}>Pricing</Tab>
@@ -102,17 +92,16 @@ const NavHeader: React.FC = () => {
           </motion.ul>
         )}
       </AnimatePresence>
-    </motion.header>
+    </header>
   );
 };
 
-// Tab component props
+// Tab component
 interface TabProps {
   children: React.ReactNode;
   setPosition: React.Dispatch<React.SetStateAction<CursorPosition>>;
 }
 
-// Tab component
 const Tab: React.FC<TabProps> = ({ children, setPosition }) => {
   const ref = useRef<HTMLLIElement>(null);
 
@@ -121,7 +110,6 @@ const Tab: React.FC<TabProps> = ({ children, setPosition }) => {
       ref={ref}
       onMouseEnter={() => {
         if (!ref.current) return;
-
         const { width } = ref.current.getBoundingClientRect();
         setPosition({
           width,
@@ -129,24 +117,23 @@ const Tab: React.FC<TabProps> = ({ children, setPosition }) => {
           left: ref.current.offsetLeft,
         });
       }}
-      className="relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase text-white mix-blend-difference md:px-5 md:py-3 md:text-base text-center"
+      className="relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase text-white mix-blend-difference md:px-5 md:py-3 md:text-base"
     >
       {children}
     </li>
   );
 };
 
-// Cursor component props
+// Cursor component
 interface CursorProps {
   position: CursorPosition;
 }
 
-// Cursor component
 const Cursor: React.FC<CursorProps> = ({ position }) => {
   return (
     <motion.li
       animate={position}
-      className="absolute z-0 h-7 rounded-full bg-black md:h-12 hidden md:block"
+      className="absolute z-0 h-7 rounded-full bg-black md:h-12"
     />
   );
 };
